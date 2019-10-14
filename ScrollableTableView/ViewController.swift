@@ -25,7 +25,7 @@ class ViewController: UIViewController {
 
 extension ViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return viewModel.rows.count
+        return viewModel.itemCount
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -39,12 +39,20 @@ extension ViewController: UITableViewDataSource {
 
 extension ViewController: UITableViewDelegate {
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        let currentOffset = scrollView.contentOffset.y
-        let maximumOffset = scrollView.contentSize.height - scrollView.frame.size.height
-        let distanceToBottom = maximumOffset - currentOffset
-        if distanceToBottom < 500 {
-            viewModel.fetchRows()
-            tableView.reloadData()
+        if viewModel.hasMoreContent {
+            let currentOffset = scrollView.contentOffset.y
+            let maximumOffset = scrollView.contentSize.height - scrollView.frame.size.height
+            let distanceToBottom = maximumOffset - currentOffset
+            if distanceToBottom < scrollView.frame.size.height / 2 {
+                print("scrollView.contentSize.height: \(scrollView.contentSize.height)")
+                print("scrollView.frame.size.height: \(scrollView.frame.size.height)")
+                print("currentOffset: \(currentOffset)")
+                print("maximumOffset: \(maximumOffset)")
+                print("distanceToBottom: \(distanceToBottom)")
+                
+                viewModel.fetchRows()
+                tableView.reloadData()
+            }
         }
     }
 }
@@ -52,14 +60,27 @@ extension ViewController: UITableViewDelegate {
 class ViewModel {
     private var count: Int = 1
     var rows: [Row] = []
+    var hasMoreContent: Bool = false
+    
+    var itemCount: Int {
+        return rows.count
+    }
     
     func fetchRows() {
         print("fetch count: \(count)")
         for _ in 0 ..< 20 {
+            if count > 50 {
+                hasMoreContent = false
+                return
+            }
+            
             let row = Row(number: count)
             rows.append(row)
             count += 1
         }
+        
+        hasMoreContent = true
+        return
     }
 }
 
